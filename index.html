@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord DM Spammer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #3d3d3d;
+            color: white;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #submitBtn {
+            background-color: #5865f2;
+            color: white;
+        }
+        #submitBtn:hover:not(:disabled) {
+            background-color: #4752c4;
+        }
+        #submitBtn:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+        #stopBtn {
+            background-color: #ed4245;
+            color: white;
+        }
+        #stopBtn:hover {
+            background-color: #c03537;
+        }
+        .loading {
+            opacity: 0.7;
+        }
+        #status {
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-label {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #5865f2;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #fileName {
+            margin-left: 10px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Discord DM Spammer</h1>
+        
+        <form id="form">
+            <div class="form-group">
+                <label for="token">Discord トークン:</label>
+                <input type="text" id="token" placeholder="トークンを入力してください" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="userIds">対象ユーザーID (オプション, カンマ区切り):</label>
+                <input type="text" id="userIds" placeholder="ユーザーIDをカンマ区切りで入力">
+            </div>
+            
+            <div class="form-group">
+                <label>グループアイコン:</label>
+                <div class="file-input-wrapper">
+                    <div class="file-input-label">ファイルを選択</div>
+                    <input type="file" id="image" accept="image/*">
+                </div>
+                <span id="fileName">未選択</span>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="showLogsCheckbox">
+                <label for="showLogsCheckbox">詳細ログを表示</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="spamDmCheckbox">
+                <label for="spamDmCheckbox">DMにもスパムする</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="leaveDMCheckbox">
+                <label for="leaveDMCheckbox">グループ作成後に退出する</label>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" id="submitBtn">実行</button>
+                <button type="button" id="stopBtn">停止</button>
+            </div>
+        </form>
+        
+        <div class="form-group">
+            <label>ステータス:</label>
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
