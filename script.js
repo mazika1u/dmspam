@@ -1,6 +1,3 @@
-const emojis = '😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😗😚😙😋😛😜🤪🤨🧐🤓😎🥸🤠🤡🥳😏😒😞😔😟😕🙁☹️😣😖😫😩🥺😢😭😤😠😡🤬🤯😳🥵🥶😱😨😰😥😓🤗🤔🤭🤫🤥😶😐😑🫡🫢🫣🤤😪😴😵😵‍💫😲😯😬🙄😮‍💨😷🤒🤕🤢🤮🤧😇🥹🤑🤠😈👿👹👺💀☠️👻👽🤖🎃😺😸😹😻😼😽🙀😿😾';
-const emojiArray = Array.from(emojis);
-
 let show_all_logs = false;
 let run_spam_dm = false;
 let leave_group = false;
@@ -9,14 +6,14 @@ let stop_spam = false;
 // イベントリスナーの設定
 document.getElementById('stopBtn').addEventListener('click', () => {
     stop_spam = true;
-    log('🛑 スパムが停止されました');
+    log('🛑 処理を停止しました');
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = false;
-    submitBtn.textContent = '実行';
+    submitBtn.textContent = '実行開始';
 });
 
 document.getElementById('image').addEventListener('change', event => {
-    const fileName = event.target.files[0]?.name || '未選択';
+    const fileName = event.target.files[0]?.name || 'ファイル未選択';
     document.getElementById('fileName').textContent = fileName;
 });
 
@@ -42,7 +39,7 @@ document.getElementById('form').addEventListener('submit', async event => {
     submitBtn.textContent = '実行中...';
 
     const token = document.getElementById('token').value;
-    const message = '# おぜうの集い万歳\n## 今すぐ参加しよう\ndiscord.gg/acvr\nozetudo.net\nozeu.site';
+    const message = document.getElementById('message').value;
     const imageFile = document.getElementById('image').files[0];
     const userIdsInput = document.getElementById('userIds').value.trim();
     const userIds = userIdsInput ? userIdsInput.split(/[\s,]+/).map(id => id.trim()).filter(id => id) : null;
@@ -58,26 +55,26 @@ document.getElementById('form').addEventListener('submit', async event => {
         submitBtn.classList.remove('loading');
         submitBtn.textContent = 'トークン無効';
         setTimeout(() => {
-            submitBtn.textContent = '実行';
+            submitBtn.textContent = '実行開始';
         }, 2000);
         return;
     }
 
     try {
-        log('🚀 実行開始...');
+        log('🚀 実行を開始します...');
         await Promise.all([
             create_group(token, message, imageBase64, userIds),
             run_spam_dm ? spam_dm(token, message, userIds) : null
         ].filter(Boolean));
     } catch (error) {
-        log('❌ エラー: ' + error.message);
+        log('❌ エラーが発生しました: ' + error.message);
     }
 
     submitBtn.disabled = false;
     submitBtn.classList.remove('loading');
-    submitBtn.textContent = '✅ 終了';
+    submitBtn.textContent = '✅ 完了';
     setTimeout(() => {
-        submitBtn.textContent = '実行';
+        submitBtn.textContent = '実行開始';
     }, 2000);
 });
 
@@ -106,12 +103,12 @@ async function send_message(token, message, channelId) {
     if (show_all_logs) log(JSON.stringify(result));
     
     if (response.status < 300) {
-        log('✅ メッセージ送信成功');
+        log('✅ メッセージを送信しました');
         return;
     }
     
     if (response.status === 429) {
-        log('⏳ メッセージ送信レート制限: ' + result.retry_after + '秒待機...');
+        log('⏳ レート制限のため待機中: ' + result.retry_after + '秒');
         await new Promise(resolve => setTimeout(resolve, result.retry_after * 1000));
         return send_message(token, message, channelId);
     }
@@ -130,7 +127,7 @@ async function create_group(token, message, imageBase64, userIds = null) {
     if (friendsResponse.status === 429) {
         const rateLimit = await friendsResponse.json();
         const waitTime = rateLimit.retry_after * 1000;
-        log('⏳ フレンド取得レート制限: ' + rateLimit.retry_after + '秒待機...');
+        log('⏳ フレンド取得レート制限: ' + rateLimit.retry_after + '秒待機');
         await sleep(waitTime);
         if (stop_spam) return;
         friendsResponse = await fetch('https://discord.com/api/v9/users/@me/relationships', {
@@ -153,7 +150,7 @@ async function create_group(token, message, imageBase64, userIds = null) {
     }
     
     if (recipientIds.length === 0) {
-        log('❌ 指定されたユーザーはフレンドではありません。');
+        log('❌ 対象ユーザーが見つかりません');
         return;
     }
     
@@ -161,7 +158,7 @@ async function create_group(token, message, imageBase64, userIds = null) {
     do {
         if (stop_spam) return;
         
-        const groupName = 'spam-by-ozeu-' + getRandomEmojis(10) + ' https://discord.gg/ozetudo';
+        const groupName = '情報共有会 - ' + generateRandomString(6);
         
         try {
             let createResponse = await fetch('https://discord.com/api/v9/users/@me/channels', {
@@ -173,14 +170,14 @@ async function create_group(token, message, imageBase64, userIds = null) {
             if (createResponse.status === 429) {
                 const rateLimit = await createResponse.json();
                 const waitTime = rateLimit.retry_after * 1000;
-                log('⏳ グループ作成レート制限: ' + rateLimit.retry_after + '秒待機...');
+                log('⏳ グループ作成レート制限: ' + rateLimit.retry_after + '秒待機');
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 if (stop_spam) return;
                 continue;
             }
             
             if (createResponse.status === 400) {
-                log('❌ グループ作成失敗(400)：フレンドリストを再取得します');
+                log('❌ グループ作成失敗: フレンドリストを再取得します');
                 const friendsResponse2 = await fetch('https://discord.com/api/v9/users/@me/relationships', {
                     'headers': {'Authorization': token}
                 });
@@ -196,7 +193,7 @@ async function create_group(token, message, imageBase64, userIds = null) {
                 }
                 
                 if (recipientIds.length === 0) {
-                    log('❌ 対象ユーザーがいなくなったため、処理を中断します');
+                    log('❌ 対象ユーザーがいないため処理を中断します');
                     return;
                 }
                 
@@ -219,13 +216,13 @@ async function create_group(token, message, imageBase64, userIds = null) {
             
             if (editResponse.status < 300) {
                 successCount++;
-                log('✅ グループ作成成功 (' + successCount + ' 個目)');
+                log('✅ グループを作成しました (' + successCount + '個目)');
             }
             
             if (editResponse.status === 429) {
                 const rateLimit = await editResponse.json();
                 const waitTime = rateLimit.retry_after * 1000;
-                log('⏳ グループ編集レート制限: ' + rateLimit.retry_after + '秒待機...');
+                log('⏳ グループ編集レート制限: ' + rateLimit.retry_after + '秒待機');
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 if (stop_spam) return;
                 continue;
@@ -253,7 +250,7 @@ async function spam_dm(token, message, userIds = null) {
     if (channelsResponse.status === 429) {
         const rateLimit = await channelsResponse.json();
         const waitTime = rateLimit.retry_after * 1000;
-        log('⏳ DMリスト取得レート制限: ' + rateLimit.retry_after + '秒待機...');
+        log('⏳ DMリスト取得レート制限: ' + rateLimit.retry_after + '秒待機');
         await new Promise(resolve => setTimeout(resolve, waitTime));
         channelsResponse = await fetch('https://discord.com/api/v10/users/@me/channels', {
             'headers': headers
@@ -293,12 +290,12 @@ async function leave_group_dm(token, channelId) {
         });
         
         if (response.status < 300) {
-            log('✅ グループ ' + channelId + ' を正常に退出しました。');
+            log('✅ グループから退出しました: ' + channelId);
         } else {
             if (response.status === 429) {
                 const rateLimit = await response.json();
                 const waitTime = rateLimit.retry_after || 1;
-                log('⏳ グループ退出レート制限：' + rateLimit.retry_after + '秒待機...');
+                log('⏳ グループ退出レート制限: ' + rateLimit.retry_after + '秒待機');
                 await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
                 return leave_group_dm(token, channelId);
             } else {
@@ -318,10 +315,10 @@ async function is_token_valid(token) {
     
     if (response.status < 300) {
         const userData = await response.json();
-        log('✅ トークン有効：' + userData.username);
+        log('✅ トークン有効: ' + userData.username);
         return true;
     } else {
-        log('❌ トークン無効:（status ' + response.status + '）');
+        log('❌ トークン無効 (status: ' + response.status + ')');
         return false;
     }
 }
@@ -345,11 +342,11 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function getRandomEmojis(count) {
+function generateRandomString(length) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
-    for (let i = 0; i < count; i++) {
-        const randomIndex = Math.floor(Math.random() * emojiArray.length);
-        result += emojiArray[randomIndex];
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
-}
+                       }
